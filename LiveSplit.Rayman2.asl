@@ -26,8 +26,8 @@ update
 start
 {
     if (current.levelID.ToLower() == "jail_20" && old.levelID.ToLower() == "jail_20" && !old.isLoading &&
-        (Math.Abs(current.posX - old.posX) > 0.01 ||
-        (Math.Abs(current.posY - old.posY) > 0.01)))
+        (Math.Abs(current.posX - old.posX) > 0.1 ||
+        (Math.Abs(current.posY - old.posY) > 0.1)))
         return true; // X/Y position changed
 }
 
