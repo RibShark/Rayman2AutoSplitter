@@ -1,58 +1,56 @@
 state("Rayman2")
 {
     string8 levelID      : "Rayman2.exe", 0x10039F;
-    bool isCutscene      : "Rayman2.exe", 0xB7304, 0x17E;
+    float posX           : "Rayman2.exe", 0x100560, 0x224, 0x310, 0x34, 0x0, 0x1ac;
+    float posY           : "Rayman2.exe", 0x100560, 0x224, 0x310, 0x34, 0x0, 0x1b0;
     byte finalBossHealth : "Rayman2.exe", 0x102D64, 0xE4, 0x0, 0x4, 0x741;
-    
+    bool isLoading       : "Rayman2.exe", 0x11663C;
 }
 
 init
 {
-   vars.cutsceneCounter = 0;
    vars.scanForBossHealth = false;
 }
 
 update
 {
-    if (current.levelID == "jail_20" && old.levelID == "jail_20" && old.isCutscene && !current.isCutscene)
-        vars.cutsceneCounter++;
-    if (!vars.scanForBossHealth && current.levelID == "Rhop_10" && current.finalBossHealth == 24)
+    if (!vars.scanForBossHealth && current.levelID.ToLower() == "rhop_10" && current.finalBossHealth == 24)
         vars.scanForBossHealth = true;
-    /*print("LevelID: " + current.levelID);
-    print("isCutscene: " + current.isCutscene);
-    print("finalbossHealth: " + current.finalBossHealth);
-    print("cutsceneCounter: " + vars.cutsceneCounter);
-    print("scanForBossHealth: " + vars.scanForBossHealth);*/
+    //print("levelID: " + current.levelID);
+    //print("posX: " + current.posX);
+    //print("posY: " + current.posY);
+    //print("finalbossHealth: " + current.finalBossHealth);
+    //print("scanForBossHealth: " + vars.scanForBossHealth);
 }
 
 start
 {
-    if (vars.cutsceneCounter == 2) 
-    {
-        vars.cutsceneCounter = 0;
-        return true;
-    }
-    return false;
+    if (current.levelID.ToLower() == "jail_20" && old.levelID.ToLower() == "jail_20" && !old.isLoading &&
+        (Math.Abs(current.posX - old.posX) > 0.01 ||
+        (Math.Abs(current.posY - old.posY) > 0.01)))
+        return true; // X/Y position changed
 }
 
 reset
 {
-    return current.levelID == "jail_10";
+    return current.levelID.ToLower() == "jail_10" &&
+        old.levelID.ToLower() != "jail_10";
 }
 
 isLoading
 {
-    // return current.isLoading;
+    return current.isLoading;
 }
 
 split
 {
-    if (current.levelID == "mapmonde" && old.levelID != "mapmonde" && old.levelID != "menu")
-        return true;
-    if (vars.scanForBossHealth && current.levelID == "Rhop_10" && current.finalBossHealth == 0)
+    if (current.levelID.ToLower() == "mapmonde" && old.levelID.ToLower() != "mapmonde" && old.levelID.ToLower() != "menu")
+        return true; // map screen entered
+
+    if (vars.scanForBossHealth && current.levelID.ToLower() == "rhop_10" && current.finalBossHealth == 0)
     {
         vars.scanForBossHealth = false;
-        return true;
+        return true; // final boss health 0
     }
     return false;
 }
