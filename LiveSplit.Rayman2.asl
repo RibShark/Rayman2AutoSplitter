@@ -3,19 +3,35 @@ state("Rayman2")
     string8 levelID      : "Rayman2.exe", 0x10039F;
     float posX           : "Rayman2.exe", 0x100578, 0x4, 0x0, 0x1C;
     float posY           : "Rayman2.exe", 0x100578, 0x4, 0x0, 0x20;
+    float posZ           : "Rayman2.exe", 0x100578, 0x4, 0x0, 0x24;
     byte finalBossHealth : "Rayman2.exe", 0x102D64, 0xE4, 0x0, 0x4, 0x741;
     bool isLoading       : "Rayman2.exe", 0x11663C;
+	uint customBits       : "Rayman2.exe", 0x100578, 0x4, 0x4, 0x24;
 }
 
 init
 {
    vars.scanForBossHealth = false;
+   vars.inControl = false;
+   vars.inControlTimer = 0;
 }
 
 update
 {
     if (!vars.scanForBossHealth && current.levelID.ToLower() == "rhop_10" && current.finalBossHealth == 24)
         vars.scanForBossHealth = true;
+	
+	if (current.isLoading) {
+		vars.levelTimer = 0;
+		vars.inControlTimer = 0;
+	}
+	
+	vars.inControl = ((current.customBits&0x10000) == 0);
+	vars.inControlTimer++;
+	if (!vars.inControl) {
+		vars.inControlTimer = 0;
+	}
+	
     //print("levelID: " + current.levelID);
     //print("posX: " + current.posX);
     //print("posY: " + current.posY);
@@ -25,10 +41,9 @@ update
 
 start
 {
-    if (current.levelID.ToLower() == "jail_20" && old.levelID.ToLower() == "jail_20" && !old.isLoading &&
-        (Math.Abs(current.posX - old.posX) > 0.1 ||
-        (Math.Abs(current.posY - old.posY) > 0.1)))
-        return true; // X/Y position changed
+        if (current.levelID.ToLower() == "jail_20" && old.levelID.ToLower() == "jail_20" && !old.isLoading && !current.isLoading && vars.inControlTimer>5 &&
+        (Math.Abs(current.posX - old.posX) > 0.01 || Math.Abs(current.posY - old.posY) > 0.01 || Math.Abs(current.posZ - old.posZ) > 0.01))
+        return true; // X/Y/Z position changed
 }
 
 reset
